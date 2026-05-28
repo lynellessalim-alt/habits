@@ -1,0 +1,6 @@
+{
+  "name": "HabitBloom",
+  "description": "A cozy, medieval fantasy RPG habit tracker where completing quests levels up your character, maintains your streaks, and blossoms your virtual magical garden.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

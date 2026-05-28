@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "The user progress, gold/crystals, levels, XP and achievements.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The Firebase Auth UID of the user." },
+        "displayName": { "type": "string", "description": "User's fantasy nickname." },
+        "email": { "type": "string", "description": "User's email." },
+        "photoURL": { "type": "string", "description": "Avatar image URL." },
+        "xp": { "type": "number", "description": "Total experience points earned." },
+        "crystals": { "type": "number", "description": "Crystals / crystals currency." },
+        "level": { "type": "number", "description": "Current Level." },
+        "perfectDays": { "type": "number", "description": "Number of days where all quests were completed." },
+        "bestStreak": { "type": "number", "description": "Longest daily completion streak." },
+        "currentStreak": { "type": "number", "description": "Current active daily completion streak." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["uid", "displayName", "xp", "crystals", "level", "perfectDays", "bestStreak", "currentStreak", "createdAt", "updatedAt"]
+    },
+    "Quest": {
+      "title": "Quest",
+      "description": "A habit or task tracked by the user, representing their daily quests.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the quest." },
+        "userId": { "type": "string", "description": "UID of the owner user." },
+        "title": { "type": "string", "description": "Title of the quest (e.g., Drink 2L Water)." },
+        "description": { "type": "string", "description": "Subtext or descriptive summary." },
+        "xpReward": { "type": "number", "description": "Amount of XP awarded upon completion." },
+        "icon": { "type": "string", "description": "Lucide icon name (e.g., Droplets, BookOpen, SmartphoneCharging)." },
+        "streak": { "type": "number", "description": "Current completion streak for this specific habit." },
+        "completed": { "type": "boolean", "description": "Completion status for the current day." },
+        "lastCompletedAt": { "type": "string", "format": "date-time", "description": "Last timestamp when checked off." },
+        "isDefault": { "type": "boolean", "description": "Whether this is a standard system quest." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["id", "userId", "title", "xpReward", "icon", "streak", "completed", "createdAt", "updatedAt"]
+    },
+    "ActivityLog": {
+      "title": "Activity Log",
+      "description": "Daily snapshot of user activity powering the calendar and history screens.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Date code formatted as YYYY-MM-DD." },
+        "userId": { "type": "string", "description": "UID of the owner user." },
+        "completedCount": { "type": "number", "description": "Number of quests completed on this day." },
+        "totalCount": { "type": "number", "description": "Total quests tracked on this day." },
+        "xpEarned": { "type": "number", "description": "XP gained on this day." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp." }
+      },
+      "required": ["id", "userId", "completedCount", "totalCount", "xpEarned", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user statistics, levels, currency and personal profile details."
+    },
+    "/users/{userId}/quests/{questId}": {
+      "schema": "Quest",
+      "description": "User's customized list of adventure quests and habits."
+    },
+    "/users/{userId}/activity_logs/{dateStr}": {
+      "schema": "ActivityLog",
+      "description": "Tracked completion scores for each calendar date (YYYY-MM-DD) to power charts and heatmaps."
+    }
+  }
+}

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap');
+
+@theme {
+  --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-surface: #fff8f7;
+  --color-surface-dim: #ebd5d7;
+  --color-surface-bright: #fff8f7;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fff0f1;
+  --color-surface-container: #ffe9eb;
+  --color-surface-container-high: #fae3e5;
+  --color-surface-container-highest: #f4dddf;
+  --color-on-surface: #25181a;
+  --color-on-surface-variant: #514344;
+  --color-inverse-surface: #3b2d2f;
+  --color-inverse-on-surface: #ffecee;
+  --color-outline: #847374;
+  --color-outline-variant: #d6c2c2;
+  --color-surface-tint: #854f54;
+  --color-primary: #854f54;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #f7b2b7;
+  --color-on-primary-container: #754247;
+  --color-inverse-primary: #fab5ba;
+  --color-secondary: #74584d;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fdd8ca;
+  --color-on-secondary-container: #785c51;
+  --color-tertiary: #695d46;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #d2c2a6;
+  --color-on-tertiary-container: #5a4f39;
+  --color-background: #fff8f7;
+  --color-on-background: #25181a;
+  --color-surface-variant: #f4dddf;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar to keep layout cozy */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #fff8f7;
+}
+::-webkit-scrollbar-thumb {
+  background: #ebd5d7;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d6c2c2;
+}
+
+/* Base custom font configuration */
+body {
+  font-family: var(--font-sans);
+  background-color: #f7e8e9;
+  color: var(--color-on-surface);
+}

@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-all default deny to ensure zero trust
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global secure primitive helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation definitions
+    function isValidUser(data) {
+      return data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.xp is number && data.xp >= 0
+        && data.crystals is number && data.crystals >= 0
+        && data.level is number && data.level >= 1
+        && data.perfectDays is number && data.perfectDays >= 0
+        && data.bestStreak is number && data.bestStreak >= 0
+        && data.currentStreak is number && data.currentStreak >= 0;
+    }
+
+    function isValidQuest(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() <= 100
+        && data.xpReward is number && data.xpReward >= 0 && data.xpReward <= 1000
+        && data.icon is string && data.icon.size() <= 50
+        && data.streak is number && data.streak >= 0
+        && data.completed is bool;
+    }
+
+    function isValidActivityLog(data) {
+      return data.userId == request.auth.uid
+        && data.completedCount is number && data.completedCount >= 0
+        && data.totalCount is number && data.totalCount >= 0
+        && data.xpEarned is number && data.xpEarned >= 0;
+    }
+
+    // Collection routing and access controls
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming())
+                     && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming())
+                     && incoming().createdAt == existing().createdAt
+                     && incoming().uid == existing().uid;
+      allow delete: if false; // User deletion restricted for ledger consistency
+    }
+
+    // 2. Quests collection (User owned subcollection)
+    match /users/{userId}/quests/{questId} {
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(questId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidId(questId)
+                     && isValidQuest(incoming())
+                     && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidId(userId) && isValidId(questId)
+                     && isValidQuest(incoming())
+                     && incoming().createdAt == existing().createdAt;
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(questId);
+    }
+
+    // 3. Activity Logs collection (User owned subcollection)
+    match /users/{userId}/activity_logs/{dateStr} {
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(dateStr);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidId(dateStr)
+                     && isValidActivityLog(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidId(dateStr)
+                     && isValidActivityLog(incoming());
+      allow delete: if isOwner(userId) && isValidId(userId) && isValidId(dateStr);
+    }
+  }
+}
