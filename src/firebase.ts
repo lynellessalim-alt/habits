@@ -71,7 +71,13 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // Authentication Sign-In Wrapper
 export async function signInWithGoogle() {
   if (!isFirebaseConfigured || !auth || !googleProvider) {
-    throw new Error('Firebase is not yet configured on this environment. Please accept the Firebase Terms of service in the setup UI to enable secure cloud storage.');
+    // If not configured, we simulate a magical guest profile locally
+    return {
+      uid: 'guest-hero-123',
+      displayName: 'Elven Adventurer (Local)',
+      email: 'guest@habitbloom.fantasy',
+      photoURL: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5'
+    };
   }
 
   try {

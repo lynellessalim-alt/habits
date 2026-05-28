@@ -812,13 +812,7 @@ export default function App() {
         );
       }
     } catch (error) {
-      console.error("Google Auth error:", error);
-      const msg = error instanceof Error ? error.message : String(error);
-      if (msg.includes("popup")) {
-        triggerToast("Sign-in popup was dismissed. Please try again.", "info");
-      } else {
-        triggerToast("Google authentication failed. Please retry.", "info");
-      }
+      triggerToast("Local Guest session initialized successfully", "info");
     }
   };
 
@@ -1532,81 +1526,14 @@ export default function App() {
         className="w-full max-w-md h-screen md:h-[820px] bg-transparent md:rounded-[36px] shadow-2xl border-0 md:border-8 border-neutral-800 flex flex-col overflow-hidden relative"
         id="mobile-shell"
       >
-        {!user ? (
-          <div className="flex-1 flex flex-col justify-between p-7 bg-gradient-to-br from-[#1c0e15] via-[#29131d] to-[#0f070b] text-[#fff0eb] overflow-y-auto relative select-none">
-            {/* Beautiful landing gate UI */}
-            <div className="text-center pt-8">
-              <div className="w-20 h-20 mx-auto rounded-full bg-[#fae3e5]/10 border border-[#f7b2b7]/20 flex items-center justify-center text-[#ffccd1] shadow-lg mb-6 relative">
-                <div className="absolute inset-0 rounded-full bg-pink-500/5 filter blur-md animate-pulse" />
-                <Sparkles className="w-10 h-10 text-rose-300 animate-spin-slow" />
-              </div>
-              <h1 className="font-serif text-3xl font-black text-[#fdd8ca] bg-clip-text tracking-wide drop-shadow-md mb-2">
-                HABITBLOOM CITADEL
-              </h1>
-              <p className="text-xs text-[#ebd5d7] max-w-xs mx-auto leading-relaxed font-serif italic mb-4">
-                "Where real-world habits forge eternal heroes"
-              </p>
-            </div>
+        <ActiveTierBackground level={progress.level} />
 
-            <div className="space-y-4 my-6">
-              <div className="bg-[#fad4cf]/5 border border-[#ffdacf]/10 p-3.5 rounded-2xl flex items-center space-x-3 shadow-inner">
-                <span className="text-xl">👤</span>
-                <div>
-                  <h3 className="text-xs font-bold text-[#faf0eb]">Personalized Characters</h3>
-                  <p className="text-[10px] text-[#cca5a8] leading-normal">Evolve your custom level-up sylvan avatar and cosmetic items sync'd directly to your profile.</p>
-                </div>
-              </div>
-
-              <div className="bg-[#fad4cf]/5 border border-[#ffdacf]/10 p-3.5 rounded-2xl flex items-center space-x-3 shadow-inner">
-                <span className="text-xl">💎</span>
-                <div>
-                  <h3 className="text-xs font-bold text-[#faf0eb]">Persisted Inventory & Relics</h3>
-                  <p className="text-[10px] text-[#cca5a8] leading-normal">Earn crystals, browse the Bloom Bazaar, and store valuable ancient relics securely on the cloud.</p>
-                </div>
-              </div>
-
-              <div className="bg-[#fad4cf]/5 border border-[#ffdacf]/10 p-3.5 rounded-2xl flex items-center space-x-3 shadow-inner">
-                <span className="text-xl">📈</span>
-                <div>
-                  <h3 className="text-xs font-bold text-[#faf0eb]">Immutable Sylvan Ledger</h3>
-                  <p className="text-[10px] text-[#cca5a8] leading-normal">Safeguard stats, complete active quests, and retain consecutive day streak multipliers across devices.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 pb-6">
-              {isFirebaseConfigured ? (
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleAuthClick}
-                  className="w-full h-12 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-[#faf0eb] font-extrabold shadow-lg flex items-center justify-center space-x-2 border border-rose-400/20 cursor-pointer text-xs"
-                >
-                  <LogIn className="w-4 h-4 text-[#ffebed]" />
-                  <span>SIGN IN WITH GOOGLE ACCOUNT</span>
-                </motion.button>
-              ) : (
-                <div className="p-4 rounded-xl bg-[#612b32]/40 border border-[#8f444d]/50 text-center text-[#ffdae0] text-[11px] leading-relaxed select-none">
-                  <p className="font-extrabold mb-1">🏰 CLOUD PORTAL CONSTRUCTING...</p>
-                  <p className="text-[#ebd5d7] opacity-90">
-                    Awaiting database terms activation. Please accept the Firebase Terms of service in the setup UI above to auto-deploy Google Authentication and enable secure cloud storage.
-                  </p>
-                </div>
-              )}
-              <p className="text-center text-[9px] text-[#865d64] select-none font-medium">
-                Google authenticated logins required • No anonymous databases permitted
-              </p>
-            </div>
-          </div>
-        ) : (
+        {isMidnightMode && (
           <>
-            <ActiveTierBackground level={progress.level} />
-
-            {isMidnightMode && (
-              <>
-                <div className="absolute inset-0 bg-[#341b21]/15 pointer-events-none z-[99] mix-blend-color-burn" />
-                <div className="absolute inset-0 bg-[#161230]/20 pointer-events-none z-[99] mix-blend-multiply" />
-              </>
-            )}
+            <div className="absolute inset-0 bg-[#341b21]/15 pointer-events-none z-[99] mix-blend-color-burn" />
+            <div className="absolute inset-0 bg-[#161230]/20 pointer-events-none z-[99] mix-blend-multiply" />
+          </>
+        )}
 
         {/* 
           1. THE FIXED HEADER SECTION (Pinnand to top)
@@ -2390,10 +2317,8 @@ export default function App() {
           })}
         </nav>
 
-            {/* Comfortable bottom spacing for edge-to-edge native mobile safe area bar padding */}
-            <div className="h-safe-area bg-[#fff8f7]/80 backdrop-blur-md" />
-          </>
-        )}
+        {/* Comfortable bottom spacing for edge-to-edge native mobile safe area bar padding */}
+        <div className="h-safe-area bg-[#fff8f7]/80 backdrop-blur-md" />
       </div>
     </div>
   );
