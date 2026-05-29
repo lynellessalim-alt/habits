@@ -75,6 +75,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  getDocFromServer,
 } from "firebase/firestore";
 
 interface ActiveTierBackgroundProps {
@@ -424,6 +425,19 @@ export default function App() {
 
   // Auth Status triggers
   useEffect(() => {
+    if (isFirebaseConfigured && db) {
+      const testConnection = async () => {
+        try {
+          await getDocFromServer(doc(db, "test", "connection"));
+        } catch (error) {
+          if (error instanceof Error && error.message.includes("offline")) {
+            console.error("Please check your Firebase configuration or network status.", error);
+          }
+        }
+      };
+      testConnection();
+    }
+
     if (!auth) {
       setLoading(false);
       loadLocalState();
@@ -1535,9 +1549,49 @@ export default function App() {
           </>
         )}
 
-        {/* 
-          1. THE FIXED HEADER SECTION (Pinnand to top)
-        */}
+        {!user ? (
+          <div className="flex-1 flex flex-col justify-center items-center px-6 py-8 z-10 select-none text-center space-y-8 animate-fade-in">
+            <div className="space-y-4">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-300 via-purple-300 to-indigo-300 scale-110 blur-md opacity-75 animate-pulse" />
+                <div className="relative w-24 h-24 bg-[#fae3e5] rounded-full flex items-center justify-center text-primary border border-[#f7b2b7] mx-auto shadow-md">
+                  <Sparkles className="w-12 h-12 text-primary animate-spin-slow" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-[#514344] tracking-tight">
+                  HabitBloom Citadel
+                </h1>
+                <p className="text-xs font-semibold text-[#8d3240] tracking-widest uppercase mt-1">
+                  Sylvan Habit Sanctuary
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs font-semibold text-[#74584d] leading-relaxed max-w-sm">
+              Enter the magical habit-tracking valleys. Log in with your Google account to access your personalized elven characters, stats, and records. No anonymous data is permitted to preserve the sylvan balance.
+            </p>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAuthClick}
+              className="w-full max-w-xs flex items-center justify-center space-x-3 bg-gradient-to-r from-primary to-[#f87171] hover:from-primary/95 hover:to-[#f87171]/95 text-white font-black py-4 px-6 rounded-2xl shadow-lg border border-[#fcb3b7] transition-all cursor-pointer active:scale-95 text-sm"
+              id="google-signin-btn"
+            >
+              <LogIn className="w-5 h-5 shrink-0" />
+              <span>Sign In with Google</span>
+            </motion.button>
+
+            <div className="text-[10px] text-zinc-400 font-bold flex items-center space-x-1 justify-center pt-8">
+              <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+              <span>Google Authenticated Cloud Database</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* 
+              1. THE FIXED HEADER SECTION (Pinnand to top)
+            */}
         {activeTab !== "settings" && (
           <header
             className="shrink-0 bg-[#fff8f7]/80 backdrop-blur-md border-b border-[#ffdacf]/30 pt-6 pb-4 px-5 flex items-center justify-between z-40 select-none shadow-sm"
@@ -2317,8 +2371,10 @@ export default function App() {
           })}
         </nav>
 
-        {/* Comfortable bottom spacing for edge-to-edge native mobile safe area bar padding */}
-        <div className="h-safe-area bg-[#fff8f7]/80 backdrop-blur-md" />
+            {/* Comfortable bottom spacing for edge-to-edge native mobile safe area bar padding */}
+            <div className="h-safe-area bg-[#fff8f7]/80 backdrop-blur-md" />
+          </>
+        )}
       </div>
     </div>
   );
