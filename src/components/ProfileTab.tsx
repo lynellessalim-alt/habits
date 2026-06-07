@@ -376,7 +376,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         {/* Rendering item illustrations exactly */}
                         {item.icon === "pastel_butterfly_wings" && (
                           <img
-                            src="/src/assets/images/pastel_butterfly_wings_1779434472650.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_m8rhfd"
                             alt="Pastel butterfly wings"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -384,7 +384,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "golden_crystal_crown" && (
                           <img
-                            src="/src/assets/images/golden_crystal_crown_1779434568901.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_aokoxq"
                             alt="Golden crystal crown"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -392,7 +392,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "magical_fairy_companion" && (
                           <img
-                            src="/src/assets/images/magical_fairy_companion_1779435808387.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_vuo5zk"
                             alt="Magical fairy pet companion"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -400,7 +400,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "sakura_blossom_outfit" && (
                           <img
-                            src="/src/assets/images/sakura_blossom_outfit_1779434680000_1779434699850.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_aweuab"
                             alt="Sakura blossom outfit"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -408,7 +408,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "pink_star_wand" && (
                           <img
-                            src="/src/assets/images/pink_star_wand_1779434902336.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_pvzpjj"
                             alt="Pink Star Wand"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -416,7 +416,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "celestial_princess_gown" && (
                           <img
-                            src="/src/assets/images/celestial_princess_gown_1779436103660.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_wl2rx5"
                             alt="Celestial princess gown"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -424,7 +424,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "angel_halo_effect" && (
                           <img
-                            src="/src/assets/images/angel_halo_effect_1779436361889.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_zztpgn"
                             alt="Angel halo effect"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -432,7 +432,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "rose_petal_magic_effect" && (
                           <img
-                            src="/src/assets/images/rose_petal_magic_1779436230388.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_yat96j"
                             alt="Rose petal magic effect"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -440,7 +440,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "moonlight_fairy_wings" && (
                           <img
-                            src="/src/assets/images/moonlight_fairy_wings_1779435941443.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_t63u0n"
                             alt="Moonlight fairy wings"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
@@ -448,7 +448,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                         )}
                         {item.icon === "golden_sunflower_hairpin" && (
                           <img
-                            src="/src/assets/images/golden_sunflower_hairpin_1779436481206.png"
+                            src="https://res.cloudinary.com/dudunom7x/image/upload/screen_etmmx2"
                             alt="Golden sunflower hairpin"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"

@@ -221,6 +221,95 @@ async function startServer() {
     }
   });
 
+  // API 4: Verify Prestige Sanctuary Challenges
+  app.post("/api/habit/verify-prestige", async (req, res) => {
+    try {
+      const { challengeId, challengeTitle, proofText, image } = req.body;
+
+      if (!challengeId || !proofText) {
+        return res.status(400).json({ error: "Please enter your written proof of completion." });
+      }
+
+      if (!ai) {
+        // Fallback simulation mode
+        const approved = proofText.trim().length > 15;
+        const feedback = approved
+          ? `[Simulation Mode] The Archmage of the Mage Guild has inspected your sacred testament for the "${challengeTitle}" challenge. Your written chronicle, of some ${proofText.trim().length} runes, shows extreme sylvan diligence and absolute integrity! The crystal shards and XP have been certified.`
+          : `[Simulation Mode] The Archmage frowned. Your written testament is too short or lacking in magical essence. Speak more descriptively of thy journey to convince the Sages.`;
+
+        return res.json({
+          success: true,
+          approved,
+          feedback,
+          criticism: approved ? "" : "Thy written text is too brief to substantiate a Grand Prestige Challenge. Expand thy scroll of deeds!"
+        });
+      }
+
+      const promptString = `The user is presenting their petition to verify a Prestige Sanctuary Challenge.
+      Challenge ID: "${challengeId}"
+      Challenge Title: "${challengeTitle}"
+      User's Written Testament: "${proofText}"
+      
+      Requirements to verify:
+      1. For "epic-hydrate" (Prestige Hydration): They swear oath to drink 3L of cold elven elixir (water). They must state how many bottles/glasses they drank or how they achieved 3 Liters.
+      2. For "epic-offline" (Abyss of Peace Focus): They pass focus challenge for 2 continuous hours. They must describe how they maintained stillness/silence offline without any phone, what they chose to read, write, or practice.
+
+      Evaluate their written description (and optional photo if attached) carefully. Determine whether their testament is realistic, robust, and authentic (not blank, random gibberish, letters or simple shortcuts like 'done' or 'good').
+      Generate a fantasy RPG/medieval style encouraging response from the High Sages of the Sylvan Sanctuary.
+      If approved is false, write a constructive, mystic criticism guiding them on how to enrich their petition.`;
+
+      const contents: any[] = [];
+      if (image) {
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        contents.push({
+          inlineData: {
+            data: base64Data,
+            mimeType: "image/png"
+          }
+        });
+      }
+      contents.push({ text: promptString });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: contents,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              approved: {
+                type: Type.BOOLEAN,
+                description: "True if the proof is realistic and meets the challenge requirements; false if too vague, blank, or nonsense.",
+              },
+              feedback: {
+                type: Type.STRING,
+                description: "Fantasy / RPG persona speech from the High Sages evaluating and blessing their accomplishment.",
+              },
+              criticism: {
+                type: Type.STRING,
+                description: "If approved is false, mystically explain what other deeds or details they must provide.",
+              },
+            },
+            required: ["approved", "feedback", "criticism"],
+          },
+        },
+      });
+
+      const parsed = JSON.parse(response.text || "{}");
+      return res.json({
+        success: true,
+        approved: parsed.approved ?? true,
+        feedback: parsed.feedback || "Your trial is blessed.",
+        criticism: parsed.criticism || "",
+      });
+
+    } catch (error: any) {
+      console.error("Prestige verification error: ", error);
+      res.status(500).json({ error: error.message || "Failed to analyze prestige challenge." });
+    }
+  });
+
   // API Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "healthy", aiEnabled: !!ai });

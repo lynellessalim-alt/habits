@@ -21,26 +21,16 @@ import doubtWitchImage from '../assets/images/doubt_witch_1779425272518.png';
 // @ts-ignore
 import eclipseQueenImage from '../assets/images/eclipse_queen_1779425291172.png';
 
-// @ts-ignore
-import butterflyWingsImg from '../assets/images/pastel_butterfly_wings_1779434472650.png';
-// @ts-ignore
-import crystalCrownImg from '../assets/images/golden_crystal_crown_1779434568901.png';
-// @ts-ignore
-import fairyCompanionImg from '../assets/images/magical_fairy_companion_1779435808387.png';
-// @ts-ignore
-import sakuraOutfitImg from '../assets/images/sakura_blossom_outfit_1779434680000_1779434699850.png';
-// @ts-ignore
-import pinkStarWandImg from '../assets/images/pink_star_wand_1779434902336.png';
-// @ts-ignore
-import princessGownImg from '../assets/images/celestial_princess_gown_1779436103660.png';
-// @ts-ignore
-import angelHaloImg from '../assets/images/angel_halo_effect_1779436361889.png';
-// @ts-ignore
-import rosePetalMagicImg from '../assets/images/rose_petal_magic_1779436230388.png';
-// @ts-ignore
-import moonlightWingsImg from '../assets/images/moonlight_fairy_wings_1779435941443.png';
-// @ts-ignore
-import sunflowerHairpinImg from '../assets/images/golden_sunflower_hairpin_1779436481206.png';
+const butterflyWingsImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_m8rhfd';
+const crystalCrownImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_aokoxq';
+const fairyCompanionImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_vuo5zk';
+const sakuraOutfitImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_aweuab';
+const pinkStarWandImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_pvzpjj';
+const princessGownImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_wl2rx5';
+const angelHaloImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_zztpgn';
+const rosePetalMagicImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_yat96j';
+const moonlightWingsImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_t63u0n';
+const sunflowerHairpinImg = 'https://res.cloudinary.com/dudunom7x/image/upload/screen_etmmx2';
 
 // 1. Aura Belle Elf Avatar Portrait with Dynamic Cosmetic Equip Support
 export const AuraBelleAvatar: React.FC<{ 
@@ -92,48 +82,26 @@ export const AuraBelleAvatar: React.FC<{
   }
 
   return (
-    <div 
-      style={{ width: size, height: size }} 
-      className={`relative select-none flex items-center justify-center ${className}`}
-    >
+    <>
+      <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <defs>
+          <filter id="remove-white-bg" colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values="
+              1 0 0 0 0
+              0 1 0 0 0
+              0 0 1 0 0
+              -8 -8 -8 22 -0.5
+            " />
+          </filter>
+        </defs>
+      </svg>
+      <div 
+        style={{ width: size, height: size }} 
+        className={`relative select-none flex items-center justify-center ${className}`}
+      >
       {/* =========================================================
                      OUTER VISUAL EFFECTS & AURAS BY LEVEL & COSMETIC WINGS
          ========================================================= */}
-
-      {/* Under Wings (rendered behind human circle) */}
-      {hasButterflyWings && (
-        <>
-          <img 
-            src={butterflyWingsImg} 
-            alt="Butterfly Wings" 
-            className="absolute -left-[30%] top-[10%] w-[65%] h-[65%] pointer-events-none z-0 rotate-[-15deg] animate-pulse" 
-            referrerPolicy="no-referrer" 
-          />
-          <img 
-            src={butterflyWingsImg} 
-            alt="Butterfly Wings" 
-            className="absolute -right-[30%] top-[10%] w-[65%] h-[65%] pointer-events-none z-0 rotate-[15deg] scale-x-[-1] animate-pulse" 
-            referrerPolicy="no-referrer" 
-          />
-        </>
-      )}
-
-      {hasMoonlightWings && (
-        <>
-          <img 
-            src={moonlightWingsImg} 
-            alt="Moonlight Wings" 
-            className="absolute -left-[32%] top-[5%] w-[70%] h-[70%] pointer-events-none z-0 rotate-[-12deg] filter brightness-[1.1] animate-pulse" 
-            referrerPolicy="no-referrer" 
-          />
-          <img 
-            src={moonlightWingsImg} 
-            alt="Moonlight Wings" 
-            className="absolute -right-[32%] top-[5%] w-[70%] h-[70%] pointer-events-none z-0 rotate-[12deg] scale-x-[-1] filter brightness-[1.1] animate-pulse" 
-            referrerPolicy="no-referrer" 
-          />
-        </>
-      )}
 
       {/* Level 1: Small Sparkles */}
       {level === 1 && !hasButterflyWings && !hasMoonlightWings && (
@@ -195,6 +163,19 @@ export const AuraBelleAvatar: React.FC<{
         </>
       )}
 
+      {/* Outer Rose petals surround effect */}
+      {hasRosePetals && (
+        <div className="absolute inset-[-15%] pointer-events-none z-0 overflow-visible animate-pulse">
+          <img 
+            src={rosePetalMagicImg} 
+            alt="Outer Rose Petal Surround" 
+            className="absolute inset-0 w-full h-full object-contain opacity-55 scale-125 filter blur-[0.3px]" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        </div>
+      )}
+
       {/* =========================================================
                      CLIPPED MAIN CHARACTER AVATAR PORTRAIT
          ========================================================= */}
@@ -203,79 +184,125 @@ export const AuraBelleAvatar: React.FC<{
           showBorder ? customRingClass : ''
         } ${level === 5 ? 'animate-bounce [animation-duration:5s]' : ''}`}
       >
+        {/* Under Wings (rendered behind human profile inside the circle boundary) */}
+        {hasButterflyWings && (
+          <img 
+            src={butterflyWingsImg} 
+            alt="Butterfly Wings" 
+            className="absolute left-1/2 top-[10%] -translate-x-1/2 w-[90%] h-[90%] pointer-events-none z-[5] animate-pulse" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
+        {hasMoonlightWings && (
+          <img 
+            src={moonlightWingsImg} 
+            alt="Moonlight Wings" 
+            className="absolute left-1/2 top-[8%] -translate-x-1/2 w-[95%] h-[95%] pointer-events-none z-[5] filter brightness-[1.1] animate-pulse" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
         <img
           src={level === 1 ? avatarLevel1Image : level === 3 ? avatarLevel3Image : level === 4 ? avatarLevel4Image : level === 5 ? avatarLevel5Image : avatarImage}
           alt="Aura Belle Elven Warrior Profile"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
+          className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110 relative z-[10]"
         />
+
+        {/* Sakura Outfit Overlay with white background removed */}
+        {hasSakura && (
+          <img
+            src={sakuraOutfitImg}
+            alt="Sakura Blossom Outfit"
+            className="absolute bottom-[-1%] inset-x-0 w-[116%] h-[74%] mx-auto object-contain pointer-events-none z-[15]"
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer"
+          />
+        )}
+
+        {/* Celestial Gown Overlay with white background removed */}
+        {hasGown && (
+          <img
+            src={princessGownImg}
+            alt="Celestial Princess Gown"
+            className="absolute bottom-[-2%] inset-x-0 w-[116%] h-[76%] mx-auto object-contain pointer-events-none z-[15]"
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer"
+          />
+        )}
 
         {/* Rose petal magic inside-circle animation */}
         {hasRosePetals && (
-          <div className="absolute inset-0 pointer-events-none z-15 overflow-hidden rounded-full animate-pulse">
+          <div className="absolute inset-0 pointer-events-none z-[16] overflow-hidden rounded-full animate-pulse">
             <div className="absolute inset-0 bg-red-400/10 pointer-events-none" />
             <img 
               src={rosePetalMagicImg} 
               alt="Rose Petal Aura Overlay" 
-              className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen scale-110" 
+              className="absolute inset-0 w-full h-full object-cover opacity-60 scale-110" 
+              style={{ filter: "url(#remove-white-bg)" }}
               referrerPolicy="no-referrer" 
             />
           </div>
         )}
+
+        {/* Halo Effect with white background removed */}
+        {hasHalo && (
+          <img 
+            src={angelHaloImg} 
+            alt="Angel Halo" 
+            className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-[34%] h-[34%] pointer-events-none z-[20] animate-bounce [animation-duration:3s]" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
+        {/* Crown with white background removed */}
+        {hasCrown && (
+          <img 
+            src={crystalCrownImg} 
+            alt="Golden Crystal Crown" 
+            className="absolute top-[2%] left-1/2 -translate-x-[50%] w-[28%] h-[28%] pointer-events-none z-[20] transform hover:scale-110 transition-transform text-shadow" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
+        {/* Sunflower Hairpin with white background removed */}
+        {hasSunflowerVal && (
+          <img 
+            src={sunflowerHairpinImg} 
+            alt="Golden Sunflower Hairpin" 
+            className="absolute top-[14%] right-[22%] w-[20%] h-[20%] pointer-events-none z-[20] rotate-[15deg] drop-shadow-md" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
+        {/* Fairy Companion with white background removed */}
+        {hasPet && (
+          <img 
+            src={fairyCompanionImg} 
+            alt="Fairy Companion" 
+            className="absolute right-[4%] bottom-[12%] w-[32%] h-[32%] pointer-events-none z-[22] animate-bounce [animation-duration:4s]" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
+
+        {/* Magic Wand with white background removed */}
+        {hasWand && (
+          <img 
+            src={pinkStarWandImg} 
+            alt="Pink Star Wand" 
+            className="absolute left-[4%] bottom-[4%] w-[38%] h-[38%] pointer-events-none z-[22] rotate-[-15deg] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] animate-pulse" 
+            style={{ filter: "url(#remove-white-bg)" }}
+            referrerPolicy="no-referrer" 
+          />
+        )}
       </div>
-
-      {/* =========================================================
-                     ACTIVE EQUIPMENT OVERLAYS (FRONT / UPPER LAYER)
-         ========================================================= */}
-      {/* Halo Effect */}
-      {hasHalo && (
-        <img 
-          src={angelHaloImg} 
-          alt="Angel Halo" 
-          className="absolute -top-[18%] left-1/2 -translate-x-1/2 w-[42%] h-[42%] pointer-events-none z-20 animate-bounce [animation-duration:3s]" 
-          referrerPolicy="no-referrer" 
-        />
-      )}
-
-      {/* Crown */}
-      {hasCrown && (
-        <img 
-          src={crystalCrownImg} 
-          alt="Golden Crystal Crown" 
-          className="absolute -top-[16%] left-1/2 -translate-x-[50%] w-[38%] h-[38%] pointer-events-none z-25 transform hover:scale-110 transition-transform text-shadow" 
-          referrerPolicy="no-referrer" 
-        />
-      )}
-
-      {/* Sunflower Hairpin */}
-      {hasSunflowerVal && (
-        <img 
-          src={sunflowerHairpinImg} 
-          alt="Golden Sunflower Hairpin" 
-          className="absolute top-[3%] right-[-2%] w-[32%] h-[32%] pointer-events-none z-20 rotate-[20deg] drop-shadow-md" 
-          referrerPolicy="no-referrer" 
-        />
-      )}
-
-      {/* Fairy Companion */}
-      {hasPet && (
-        <img 
-          src={fairyCompanionImg} 
-          alt="Fairy Companion" 
-          className="absolute -right-[23%] -top-[10%] w-[40%] h-[40%] pointer-events-none z-20 animate-bounce [animation-duration:4s]" 
-          referrerPolicy="no-referrer" 
-        />
-      )}
-
-      {/* Magic Wand */}
-      {hasWand && (
-        <img 
-          src={pinkStarWandImg} 
-          alt="Pink Star Wand" 
-          className="absolute -right-[15%] bottom-[2%] w-[42%] h-[42%] pointer-events-none z-20 rotate-[22deg] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] animate-pulse" 
-          referrerPolicy="no-referrer" 
-        />
-      )}
 
       {/* Pastel Water Magic Anim */}
       {hasWaterMagic && (
@@ -289,6 +316,7 @@ export const AuraBelleAvatar: React.FC<{
         </div>
       )}
     </div>
+    </>
   );
 };
 

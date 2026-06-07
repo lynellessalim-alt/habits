@@ -13,7 +13,12 @@ import {
   Volume2,
   X,
   Compass as QuestIcon,
-  BookOpen
+  BookOpen,
+  Camera,
+  Upload,
+  AlertCircle,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { UserProgress, Quest } from "../types";
 
@@ -531,26 +536,129 @@ export const ShineStreakCounter: React.FC<{ streak: number }> = ({ streak }) => 
 export const BonusQuestsPanel: React.FC<{ onCompleteChallenge: (xp: number, crystals: number) => void }> = ({
   onCompleteChallenge,
 }) => {
-  const [completeMap, setCompleteMap] = useState<Record<string, boolean>>({});
+  const [completeMap, setCompleteMap] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem("hb_prestige_completed");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const CHALLENGES = [
     { id: "epic-hydrate", title: "Prestige Hydration", desc: "Swear oath to drink 3L of cold elven elixir.", xp: 50, crystals: 15, icon: "🍼" },
     { id: "epic-offline", title: "Abyss of Peace Focus", desc: "Pass focus challenge for 2 continuous hours.", xp: 90, crystals: 30, icon: "🌌" }
   ];
 
-  const handleChallenge = (id: string, xp: number, crystals: number) => {
-    if (completeMap[id]) return;
-    setCompleteMap((prev) => ({ ...prev, [id]: true }));
-    playMagicSFX("coin");
-    onCompleteChallenge(xp, crystals);
+  const [activeChallenge, setActiveChallenge] = useState<any | null>(null);
+  const [proofText, setProofText] = useState("");
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const [statusText, setStatusText] = useState("");
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+
+  const handleChallengeClick = (challenge: any) => {
+    if (completeMap[challenge.id]) return;
+    setActiveChallenge(challenge);
+    setProofText("");
+    setCapturedPhoto(null);
+    setErrorText(null);
+    setAiResponse(null);
+    setStep(0);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCapturedPhoto(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const verifyChallengeWithAI = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proofText.trim() || !activeChallenge) return;
+    
+    setIsVerifying(true);
+    setErrorText(null);
+    setAiResponse(null);
+    playMagicSFX("chime");
+
+    setStep(0);
+    setStatusText("📡 Aligning the sylvan verification matrix...");
+    
+    const p1 = new Promise((resolve) => {
+      setTimeout(() => {
+        setStep(1);
+        setStatusText("📖 Translating scroll testament and proof index...");
+        resolve(null);
+      }, 950);
+    });
+
+    const p2 = p1.then(() => new Promise((resolve) => {
+      setTimeout(() => {
+        setStep(2);
+        setStatusText("👁️ Auditing vessel volume and physical constraints...");
+        resolve(null);
+      }, 950);
+    }));
+
+    const p3 = p2.then(() => new Promise((resolve) => {
+      setTimeout(() => {
+        setStep(3);
+        setStatusText("🔮 Submitting to the Sages of Sylvan Sanctuary...");
+        resolve(null);
+      }, 950);
+    }));
+
+    const delayPromise = p3.then(() => new Promise((resolve) => setTimeout(resolve, 950)));
+
+    try {
+      const fetchPromise = fetch("/api/habit/verify-prestige", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: activeChallenge.id,
+          challengeTitle: activeChallenge.title,
+          proofText,
+          image: capturedPhoto
+        })
+      });
+
+      const [res] = await Promise.all([fetchPromise, delayPromise]);
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.approved) {
+          playMagicSFX("coin");
+          const updated = { ...completeMap, [activeChallenge.id]: true };
+          setCompleteMap(updated);
+          localStorage.setItem("hb_prestige_completed", JSON.stringify(updated));
+          onCompleteChallenge(activeChallenge.xp, activeChallenge.crystals);
+          setAiResponse(data.feedback);
+        } else {
+          playMagicSFX("fizzle");
+          setErrorText(data.criticism || "The High Sages found thy testament unconvincing.");
+        }
+      } else {
+        throw new Error(data.error || "AI Server error.");
+      }
+    } catch (e: any) {
+      playMagicSFX("fizzle");
+      setErrorText(`Failed to transmit petition: ${e.message}`);
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
     <div className="bg-white rounded-2xl border border-rose-100 p-4 shadow-sm select-none">
       <div className="flex items-center space-x-2 mb-3">
         <Crown className="w-4 h-4 text-purple-500" />
-        <h4 className="font-extrabold text-[#514344] text-xs uppercase tracking-wider">
-          Prestige Sanctuary Challenges
+        <h4 className="font-extrabold text-[#514344] text-[11px] uppercase tracking-wider">
+          Prestige Sanctuary Challenges (AI Verified)
         </h4>
       </div>
 
@@ -567,7 +675,7 @@ export const BonusQuestsPanel: React.FC<{ onCompleteChallenge: (xp: number, crys
               }`}
             >
               <div className="flex items-center space-x-3 max-w-[70%]">
-                <span className="text-xl">{c.icon}</span>
+                <span className="text-xl" role="img" aria-label={c.title}>{c.icon}</span>
                 <div>
                   <h5 className="text-[11px] font-extrabold text-[#514344] leading-normal">{c.title}</h5>
                   <p className="text-[10px] font-bold text-[#74584d]/75 leading-tight">{c.desc}</p>
@@ -576,19 +684,195 @@ export const BonusQuestsPanel: React.FC<{ onCompleteChallenge: (xp: number, crys
 
               <button
                 disabled={done}
-                onClick={() => handleChallenge(c.id, c.xp, c.crystals)}
-                className={`text-[9px] font-black px-3 py-1.5 rounded-xl shadow-inner cursor-pointer select-none transition-all ${
+                onClick={() => handleChallengeClick(c)}
+                className={`text-[9px] font-black px-3 py-1.5 rounded-xl shadow-inner cursor-pointer select-none transition-all uppercase tracking-widest ${
                   done 
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed" 
                     : "bg-[#854f54] text-white hover:bg-[#854f54]/95"
                 }`}
               >
-                {done ? "SOLVED" : `+${c.xp} XP`}
+                {done ? "SOLVED" : `VERIFY`}
               </button>
             </div>
           );
         })}
       </div>
+
+      <AnimatePresence>
+        {activeChallenge && (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 30, opacity: 0 }}
+              className="bg-white border-2 border-[#854f54]/40 w-full max-w-md rounded-[32px] overflow-hidden relative shadow-2xl p-6 text-neutral-800 animate-fade-in"
+            >
+              {/* Corner decor */}
+              <div className="absolute top-4 right-4">
+                <button
+                  type="button"
+                  disabled={isVerifying}
+                  onClick={() => setActiveChallenge(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="text-center mb-5">
+                <span className="text-4xl block mb-2">{activeChallenge.icon}</span>
+                <span className="text-[9px] font-black tracking-widest text-[#854f54] bg-[#fff2f3] px-3 py-1 rounded-full uppercase inline-block border border-red-100 font-mono">
+                  👑 Prestige Challenge Verification
+                </span>
+                <h3 className="text-base font-extrabold text-[#514344] mt-2 leading-snug">
+                  {activeChallenge.title}
+                </h3>
+                <p className="text-xs text-[#74584d]/85 leading-normal max-w-xs mx-auto mt-1 font-sans">
+                  {activeChallenge.desc}
+                </p>
+                <div className="flex justify-center space-x-3 mt-2 text-[10px] font-black text-rose-600 uppercase tracking-wider font-mono">
+                  <span>💎 +{activeChallenge.crystals} Crystals</span>
+                  <span>•</span>
+                  <span>✨ +{activeChallenge.xp} XP</span>
+                </div>
+              </div>
+
+              {/* Dynamic steps indicator when verifying */}
+              {isVerifying ? (
+                <div className="space-y-5 py-4 text-center">
+                  <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border-4 border-[#854f54]/10 border-t-[#854f54] animate-spin" />
+                    <Sparkles className="w-4 h-4 text-[#854f54] animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-extrabold text-[#514344] animate-pulse">
+                      {statusText}
+                    </p>
+                    <p className="text-[10px] text-slate-400 italic">
+                      Evaluating sylvan credentials...
+                    </p>
+                  </div>
+                  {/* Progress indicators */}
+                  <div className="grid grid-cols-4 gap-1.5 max-w-xs mx-auto">
+                    {[0, 1, 2, 3].map((s) => (
+                      <div 
+                        key={s} 
+                        className={`h-1.5 rounded-full ${
+                          s <= step 
+                            ? "bg-gradient-to-r from-pink-500 to-[#854f54]" 
+                            : "bg-slate-100"
+                        }`} 
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : aiResponse ? (
+                /* Success view */
+                <div className="space-y-4 py-2">
+                  <div className="bg-emerald-50 border border-emerald-100 p-4.5 rounded-2xl text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-lg mb-1">
+                      👑
+                    </div>
+                    <h4 className="text-xs font-black text-emerald-800 uppercase tracking-widest block leading-none">
+                      Petition Authenticated!
+                    </h4>
+                    <p className="text-xs text-emerald-950 font-bold leading-relaxed italic pr-1">
+                      "{aiResponse}"
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveChallenge(null)}
+                    className="w-full bg-[#854f54] hover:bg-[#854f54]/95 text-white font-black text-xs py-3 rounded-xl transition-all cursor-pointer shadow-md uppercase tracking-widest text-center"
+                    id="prestige-done-ok-btn"
+                  >
+                    Receive Sylvan Blessings
+                  </button>
+                </div>
+              ) : (
+                /* Edit & Verify view */
+                <form onSubmit={verifyChallengeWithAI} className="space-y-4 pt-1">
+                  {errorText && (
+                    <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-start space-x-2 text-rose-800 text-[10px] leading-relaxed">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span className="font-extrabold whitespace-pre-line">{errorText}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-[10px] uppercase font-black text-[#74584d] tracking-wide block mb-1">
+                      Write scroll testimony / proof details
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={proofText}
+                      onChange={(e) => setProofText(e.target.value)}
+                      placeholder={
+                        activeChallenge.id === "epic-hydrate"
+                          ? "E.g., I drank 3 full 1L bottles of pure spring water and kept tracking inside my journal."
+                          : "E.g., I locked my phone into the focus chest, studied React fundamentals for 2 continuous hours, and did not check notifications once."
+                      }
+                      className="w-full text-xs font-bold border border-rose-105 rounded-2xl px-3 py-2.5 bg-[#fdfbfb] outline-none focus:ring-1 focus:ring-rose-200 transition-all font-sans leading-normal text-neutral-700"
+                    />
+                  </div>
+
+                  {/* Attachment area */}
+                  <div>
+                    <label className="text-[10px] uppercase font-black text-[#74584d] tracking-wide block mb-1.5">
+                      Parchment Evidence (Optional photo)
+                    </label>
+                     {capturedPhoto ? (
+                       <div className="relative border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-2 text-center">
+                         <img 
+                           src={capturedPhoto} 
+                           alt="Evidence" 
+                           className="max-h-24 object-contain mx-auto rounded-lg" 
+                         />
+                         <button
+                           type="button"
+                           onClick={() => setCapturedPhoto(null)}
+                           className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-[8px] font-black cursor-pointer uppercase transition-colors hover:bg-red-700"
+                         >
+                           Remove
+                         </button>
+                       </div>
+                     ) : (
+                       <label className="border-2 border-dashed border-rose-105 hover:border-rose-300 bg-[#fffdfd] h-20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all">
+                         <Upload className="w-5 h-5 text-[#854f54]/45 mb-1" />
+                         <span className="text-[10px] text-[#74584d]/60 font-extrabold font-sans">Upload parchment screenshot / image</span>
+                         <input 
+                           type="file" 
+                           accept="image/*" 
+                           onChange={handleFileChange} 
+                           className="hidden" 
+                         />
+                       </label>
+                     )}
+                  </div>
+
+                  <div className="pt-2 flex justify-end space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveChallenge(null)}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-black px-4 py-2.5 rounded-xl cursor-pointer"
+                    >
+                      Banish
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-[#854f54] text-white text-xs font-black px-5 py-2.5 rounded-xl shadow hover:bg-[#854f54]/95 cursor-pointer flex items-center space-x-1.5 transition-colors uppercase tracking-widest border border-rose-400/20"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Submit Petition</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

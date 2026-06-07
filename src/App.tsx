@@ -289,13 +289,13 @@ export default function App() {
     displayName: "Elara Weaver",
     email: "info@habitbloom.fantasy",
     photoURL: null,
-    xp: 1650,
-    level: 2,
+    xp: 0,
+    level: 1,
     xpToNextLevel: 1000,
-    crystals: 240,
-    perfectDays: 18,
-    bestStreak: 12,
-    currentStreak: 5,
+    crystals: 300,
+    perfectDays: 0,
+    bestStreak: 0,
+    currentStreak: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
@@ -309,7 +309,7 @@ export default function App() {
       description: "Easy • +5 XP • +5 Crystals on 3d streak",
       xpReward: 5,
       icon: "droplets",
-      streak: 5,
+      streak: 0,
       completed: false,
       lastCompletedAt: null,
       isDefault: true,
@@ -323,9 +323,9 @@ export default function App() {
       description: "Medium • +10 XP • +10 Crystals",
       xpReward: 10,
       icon: "bookopen",
-      streak: 12,
-      completed: true,
-      lastCompletedAt: new Date().toISOString(),
+      streak: 0,
+      completed: false,
+      lastCompletedAt: null,
       isDefault: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -352,7 +352,13 @@ export default function App() {
   const [purchasedRelics, setPurchasedRelics] = useState<string[]>([]);
   const [equippedCosmetics, setEquippedCosmetics] = useState<string[]>(() => {
     const saved = localStorage.getItem("hb_equipped_cosmetics");
-    return saved ? JSON.parse(saved) : [];
+    const parsed = saved ? JSON.parse(saved) : [];
+    return parsed.filter(
+      (id: string) =>
+        id !== "cosmetic_fairy_companion" &&
+        id !== "cosmetic_butterfly_wings" &&
+        id !== "cosmetic_moonlight_wings"
+    );
   });
 
   // Interactive popup/toast details
@@ -362,6 +368,12 @@ export default function App() {
     type: "success" | "level" | "info";
   } | null>(null);
   const [levelUpModal, setLevelUpModal] = useState<number | null>(null);
+  const [enemyAttackModal, setEnemyAttackModal] = useState<{
+    enemyName: string;
+    xpDeducted: number;
+    reason: string;
+    level: number;
+  } | null>(null);
 
   // New states for extra RPG Features and AI trackers
   const [currentWaterTotalMl, setCurrentWaterTotalMl] = useState<number>(() => {
@@ -550,10 +562,22 @@ export default function App() {
       if (lastCheckedDate && lastCheckedDate !== todayStr) {
         // Did we miss any habit yesterday?
         const missedAny = quests.some((q) => !q.completed);
+        const noneCompleted = quests.length > 0 && quests.every((q) => !q.completed);
 
         let updatedProgress = { ...progress };
 
-        if (missedAny) {
+        if (noneCompleted) {
+          // Zero habits completed -> triggers heavy boss attack + XP reduction + show pop up!
+          await triggerEnemyXPAttack(progress.xp, todayStr);
+          
+          updatedProgress = {
+            ...progress,
+            currentStreak: 0,
+            updatedAt: new Date().toISOString()
+          };
+          setProgress(updatedProgress);
+          triggerToast("The Sylvan Sanctuary was completely undefended! Dark magic crumbles your XP 💥", "info");
+        } else if (missedAny) {
           // Trigger corresponding level's attack!
           await triggerAttackForXP(progress.xp, todayStr);
           
@@ -692,6 +716,106 @@ export default function App() {
     localStorage.setItem("hb_active_attack", JSON.stringify(newAttack));
   };
 
+  const triggerEnemyXPAttack = async (
+    xpValue: number,
+    dateStr: string,
+    forceLevel?: number,
+  ) => {
+    const levelToTrigger =
+      forceLevel ?? (xpValue <= 500 ? 1 : xpValue <= 1500 ? 2 : 3);
+    
+    let name = "The Sleepy Sprite";
+    let xpLoss = 50;
+    let warningText = "Drowsy Aura: Lost 50 Experience Points! Screen is slightly dimmed and sylvan balance is disturbed.";
+
+    if (levelToTrigger === 2) {
+      name = "The Doubt Witch";
+      xpLoss = 150;
+      warningText = "Whisper of Doubt: Lost 150 Experience Points! Skepticism clouds the Sylvan Sanctuary.";
+    } else if (levelToTrigger === 3) {
+      name = "The Eclipse Queen";
+      xpLoss = 300;
+      warningText = "Total Eclipse: Lost 300 Experience Points! Absolute darkness envelops the entire Citadel.";
+    }
+
+    // Play scary bell tone/doom sound
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        if (ctx.state === "suspended") {
+          ctx.resume();
+        }
+        const now = ctx.currentTime;
+        const freqs = [110.0, 137.5, 165.0, 220.0]; // A2, C#3, E3, A3
+        freqs.forEach((f, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(f, now + idx * 0.05);
+          osc.frequency.exponentialRampToValueAtTime(f / 2, now + idx * 0.05 + 0.6);
+          gain.gain.setValueAtTime(0, now + idx * 0.05);
+          gain.gain.linearRampToValueAtTime(0.06, now + idx * 0.05 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.05 + 0.9);
+          osc.start(now + idx * 0.05);
+          osc.stop(now + idx * 0.05 + 0.95);
+        });
+      }
+    } catch (_) {}
+
+    // Math.max to avoid landing on sub-zero XP
+    let currentXP = Math.max(0, progress.xp - xpLoss);
+    let currentLevel = Math.min(5, Math.floor(currentXP / 1000) + 1);
+
+    const updatedProgress = {
+      ...progress,
+      xp: currentXP,
+      level: currentLevel,
+      currentStreak: 0,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setProgress(updatedProgress);
+
+    // Show beautiful custom layout popup warning modal in state
+    setEnemyAttackModal({
+      enemyName: name,
+      xpDeducted: xpLoss,
+      reason: "No habits were completed in the Citadel today! The guardian wards collapsed, leaving the sylvan valleys open to dark shadow invasions.",
+      level: levelToTrigger,
+    });
+
+    const activeAttackObj = {
+      level: levelToTrigger,
+      name,
+      description: `Spurred by absolute negligence, ${name} has materialized to feed on your inertia.`,
+      warningText,
+      triggerDate: dateStr,
+      dismissed: false,
+    };
+
+    setActiveAttack(activeAttackObj);
+    localStorage.setItem("hb_active_attack", JSON.stringify(activeAttackObj));
+
+    persistLocalState(updatedProgress, quests, journalEntries, purchasedRelics);
+
+    if (user && db) {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          xp: currentXP,
+          level: currentLevel,
+          currentStreak: 0,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn("Failed to sync XP attack value to cloud database: ", e);
+      }
+    }
+  };
+
   // Gracefully read local values if offline or cloud database pending
   const loadLocalState = () => {
     const savedProgress = localStorage.getItem("hb_progress");
@@ -741,7 +865,12 @@ export default function App() {
         } as UserProgress;
         setProgress(activeProgress);
         if (userData.equippedCosmetics) {
-          activeEquipped = userData.equippedCosmetics;
+          activeEquipped = userData.equippedCosmetics.filter(
+            (id: string) =>
+              id !== "cosmetic_fairy_companion" &&
+              id !== "cosmetic_butterfly_wings" &&
+              id !== "cosmetic_moonlight_wings"
+          );
           setEquippedCosmetics(activeEquipped);
         }
       } else {
@@ -1525,6 +1654,62 @@ export default function App() {
         onClose={() => setLevelUpModal(null)}
       />
 
+      {/* Enemy Attack Ambush Screen Modal */}
+      {enemyAttackModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[99999] flex items-center justify-center p-4 select-none animate-fade-in">
+          {/* Blood splattered visual vignette */}
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.25),transparent_70%)] pointer-events-none" />
+          
+          <motion.div
+            initial={{ scale: 0.85, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            className="bg-[#241215] border-2 border-rose-600/40 w-full max-w-sm rounded-[28px] overflow-hidden relative shadow-[0_0_30px_rgba(239,68,68,0.3)] text-center p-6 text-white"
+            id="enemy-attack-modal"
+          >
+            {/* Sylvan dark corner decorations */}
+            <div className="absolute top-3 left-4 text-rose-500/30 text-xs">☠</div>
+            <div className="absolute top-3 right-4 text-rose-500/30 text-xs">☠</div>
+
+            {/* Glowing Enemy Level Banner */}
+            <div className="text-[10px] tracking-widest text-rose-400 font-extrabold uppercase bg-rose-955/50 inline-block px-3 py-1 rounded-full border border-rose-900/55 mb-4">
+              ⚔️ Shadow Ambush Level {enemyAttackModal.level}
+            </div>
+
+            {/* Dynamic Enemy Avatar Illustration */}
+            <div className="relative w-24 h-24 mx-auto mb-5 rounded-full bg-gradient-to-tr from-rose-950 to-[#3c141a] flex items-center justify-center border border-rose-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)] animate-pulse">
+              {enemyAttackModal.level === 1 ? (
+                <div className="text-4xl">🧚💤</div>
+              ) : enemyAttackModal.level === 3 ? (
+                <div className="text-4xl">👑🌑</div>
+              ) : (
+                <div className="text-4xl">🧙‍♀️🔮</div>
+              )}
+            </div>
+
+            <h3 className="text-base font-black tracking-tight text-rose-200">
+              {enemyAttackModal.enemyName} Attacks!
+            </h3>
+            
+            <p className="text-[10px] font-black text-red-400 mt-1 uppercase tracking-widest font-mono">
+              LOST {enemyAttackModal.xpDeducted} EXPERIENCE POINTS
+            </p>
+
+            <p className="text-xs text-rose-100/80 leading-relaxed mt-4 bg-[#14080a] p-3 rounded-xl border border-rose-950">
+              "{enemyAttackModal.reason}"
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setEnemyAttackModal(null)}
+              className="w-full mt-6 bg-gradient-to-r from-rose-700 to-red-600 hover:from-rose-600 hover:to-red-500 text-white font-extrabold text-[10px] py-3 px-6 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer uppercase tracking-widest border border-rose-400/30"
+              id="close-attack-modal-btn"
+            >
+              Defend & Cleanse the Citadel
+            </button>
+          </motion.div>
+        </div>
+      )}
+
       {/* Standalone quest completion confetti burst */}
       <CanvasConfetti active={questConfettiActive} />
 
@@ -1965,25 +2150,51 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
+                          // Uncheck all quests so completeness count is 0%
+                          const resetQuests = quests.map((q) => ({
+                            ...q,
+                            completed: false,
+                            updatedAt: new Date().toISOString(),
+                          }));
+                          setQuests(resetQuests);
+
+                          // Trigger enemy XP attack & deduct XP
+                          await triggerEnemyXPAttack(progress.xp, new Date().toISOString());
+
+                          // Streak reset to 0 and break multiplier
                           setProgress((prev) => {
                             const updated = {
                               ...prev,
                               currentStreak: 0,
-                              updatedAt: new Date().toISOString()
+                              updatedAt: new Date().toISOString(),
                             };
-                            persistLocalState(updated, quests, journalEntries, purchasedRelics);
+                            persistLocalState(updated, resetQuests, journalEntries, purchasedRelics);
                             if (user && db) {
                               const userRef = doc(db, "users", user.uid);
                               updateDoc(userRef, { currentStreak: 0, updatedAt: new Date().toISOString() }).catch(() => {});
                             }
                             return updated;
                           });
-                          triggerToast("Missed day simulated! Streak set to 0 (Multiplier: 1.0x) 📉", "info");
+
+                          // Save quests updates to database if connected
+                          if (user && db) {
+                            try {
+                              for (const q of resetQuests) {
+                                const qRef = doc(db, "users", user.uid, "quests", q.id);
+                                await updateDoc(qRef, { completed: false });
+                              }
+                            } catch (e) {
+                              console.warn("Failed to reset quest completions to cloud DB:", e);
+                            }
+                          }
+
+                          triggerToast("Streak broken & XP multiplier reset to 1.0x! 📉 👿", "info");
                         }}
-                        className="col-span-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black hover:bg-rose-100 transition-colors cursor-pointer mt-1"
+                        className="col-span-3 py-1.5 rounded-lg bg-red-950/25 border border-red-500/40 text-red-500 text-[10px] font-black hover:bg-red-950/40 transition-colors cursor-pointer mt-1"
+                        id="simulate-xp-attack-btn"
                       >
-                        💔 Simulate Missed Day (Reset Streak & Multiplier to 1.0x)
+                        👿 Simulate 0% Habits Completion (Enemy Attacks, Reduces XP & Resets Streak)
                       </button>
 
                       <button
@@ -2135,13 +2346,13 @@ export default function App() {
                   displayName: "Elara Weaver",
                   email: user?.email || "info@habitbloom.fantasy",
                   photoURL: null,
-                  xp: 1650,
-                  level: 2,
+                  xp: 0,
+                  level: 1,
                   xpToNextLevel: 1000,
-                  crystals: 240,
-                  perfectDays: 18,
-                  bestStreak: 12,
-                  currentStreak: 5,
+                  crystals: 300,
+                  perfectDays: 0,
+                  bestStreak: 0,
+                  currentStreak: 0,
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                 };
@@ -2154,7 +2365,7 @@ export default function App() {
                     description: "Easy • +5 XP • +5 Crystals on 3d streak",
                     xpReward: 5,
                     icon: "droplets",
-                    streak: 5,
+                    streak: 0,
                     completed: false,
                     lastCompletedAt: null,
                     isDefault: true,
@@ -2168,9 +2379,9 @@ export default function App() {
                     description: "Medium • +10 XP • +10 Crystals",
                     xpReward: 10,
                     icon: "bookopen",
-                    streak: 12,
-                    completed: true,
-                    lastCompletedAt: new Date().toISOString(),
+                    streak: 0,
+                    completed: false,
+                    lastCompletedAt: null,
                     isDefault: true,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
@@ -2195,13 +2406,18 @@ export default function App() {
                 setQuests(defaultQuests);
                 setJournalEntries([]);
                 setPurchasedRelics([]);
+                setEquippedCosmetics([]);
                 setIsMidnightMode(false);
                 localStorage.removeItem("hb_midnight_mode");
+                localStorage.removeItem("hb_equipped_cosmetics");
 
                 if (user && db) {
                   try {
                     const userRef = doc(db, "users", user.uid);
-                    await setDoc(userRef, defaultProgress);
+                    await setDoc(userRef, {
+                      ...defaultProgress,
+                      equippedCosmetics: []
+                    });
                     const relicsRef = doc(
                       db,
                       "users",
@@ -2220,7 +2436,7 @@ export default function App() {
                   "level",
                 );
                 playQuestSFX(false);
-                persistLocalState(defaultProgress, defaultQuests, [], []);
+                persistLocalState(defaultProgress, defaultQuests, [], [], []);
               }}
               onBackToHome={() => setActiveTab("home")}
               onGoToProfile={() => setActiveTab("profile")}
